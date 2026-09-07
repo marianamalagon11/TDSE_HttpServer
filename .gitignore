@@ -1,0 +1,31 @@
+# Salida de compilación de Maven
+target/
+dependency-reduced-pom.xml
+
+# Compilados de Java
+*.class
+*.jar
+*.war
+*.log
+
+# Configuración de IDE
+nbproject/
+nb-configuration.xml
+nbactions.xml
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Secretos y configuración local
+*.pem
+*.key
+.env
+.aws/
+credentials
