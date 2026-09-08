@@ -53,22 +53,46 @@ blank line is what tells the client where the headers end.
 #### 2.2 Accept multiple sequential requests
 
 The connection loop was changed so the process keeps accepting connections after
-completing each response. The listening socket stays open for the lifetime of the process;
-the client socket and its streams are closed after every response.
+completing each response. The listening socket stays open for the lifetime of the
+process; the client socket and its streams are closed after every response, using
+try-with-resources so they are released even when the request fails.
 
-Each connection is handled completely before the next one begins. This is **repetition,
-not concurrency**: there is a single thread of execution, and a second connection simply
-waits in the operating system's accept queue until the first one is done.
+Each connection is handled completely before the next one begins. This is
+**repetition, not concurrency**: there is a single thread of execution, and a second
+connection waits in the operating system's accept queue until the current one is
+done.
+
+The server log makes this visible. Requests never interleave — the headers of one
+request are always fully consumed and answered before the next request line appears:
+Three page reloads produced fifteen consecutive requests answered by the same running
+process, without restarting it. This also satisfies the "repeated requests" row of the
+section 6.1 test matrix.
+
+![evidence 2.2](docs/evidence2.2.png)
 
 
 ---
 
 ### 3. Serve HTML, JavaScript and images
 
-**Pending.** The home page is currently a string literal inside the Java source. It has to
-move to a public-resources area and be read from disk as bytes, with the content type
-derived from the file extension and the content length computed from the actual byte
-count.
+The home page, the stylesheet, the client script and both images are now real files
+under `src/main/resources/public`. The server reads every resource as bytes and
+announces its content type from the file extension, so text and binary resources
+follow one response path.
+
+A single page request produces five separate HTTP requests: the browser reads the
+HTML, discovers the references to the stylesheet, the script and the images, and
+asks for each one individually.
+
+| Resource | Status | Content type |
+|---|---|---|
+| `index.html` | 200 | `text/html; charset=utf-8` |
+| `styles.css` | 200 | `text/css; charset=utf-8` |
+| `app.js` | 200 | `application/javascript; charset=utf-8` |
+| `logoU.png` | 200 | `image/png` |
+| `fotoU.jpeg` | 200 | `image/jpeg` |
+
+![Network view showing five separate requests](docs/network-static.png)
 
 ---
 
