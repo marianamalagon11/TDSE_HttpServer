@@ -100,18 +100,49 @@ public class HttpServer {
         send(out, response);
     }
 
-    // Ruteo hardcodeado: primero las rutas especiales, lo demas son archivos
+    // Ruteo hardcodeado: condiciones explicitas, sin framework ni anotaciones.
+    // Lo que no sea ruta de servicio se busca como archivo estatico.
     static Response route(URI reqURI) {
         String path = reqURI.getPath();
         if (path == null) {
             return Response.text(400, "400 Bad Request");
         }
-        if (path.startsWith("/hello")) {
-            String queryStr = reqURI.getQuery();
-            System.out.println("Query str: " + queryStr);
-            return Response.json(200, "{\"response\":\"Hello world. " + queryStr + "\"}");
+
+        Map<String, String> query = parseQuery(reqURI.getRawQuery());
+
+        switch (path) {
+            case "/app/hello":
+                return Services.hello(query.get("name"));
+            case "/app/square":
+                return Services.square(query.get("n"));
+            case "/app/time":
+                return Services.time();
+            case "/app/health":
+                return Services.health();
+            default:
+                return staticFile(path);
         }
-        return staticFile(path);
+    }
+
+    // Convierto "name=Ana&n=5" en un mapa. Primero parto por & y por =, y
+    // solo despues decodifico: si decodificara antes, un %26 dentro de un
+    // valor se volveria un & de verdad y partiria mal el parametro.
+    static Map<String, String> parseQuery(String rawQuery) {
+        Map<String, String> params = new HashMap<>();
+        if (rawQuery == null || rawQuery.isBlank()) {
+            return params;
+        }
+        for (String pair : rawQuery.split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq < 0) {
+                params.put(URLDecoder.decode(pair, StandardCharsets.UTF_8), "");
+            } else {
+                String key = URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
+                String value = URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
+                params.put(key, value);
+            }
+        }
+        return params;
     }
 
     // Busca el archivo dentro de /public y lo lee como bytes

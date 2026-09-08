@@ -120,20 +120,34 @@ separators must be blocked to behave identically on either host.
 
 ### 4. Hardcoded service URLs
 
-**Partial.** One special path is recognised so far:
+Four service paths are recognised with explicit conditions on the request path. There
+is no routing framework, no annotations and no dependency injection: the mechanism
+that selects behaviour stays visible, which is what this section of the lab is meant
+to expose. Any path that is not one of these four is treated as a static resource.
 
-| Path | Input | Current response |
-|---|---|---|
-| `/hello` | a query string | a JSON body echoing the query string |
+| Path | Input | Success | Error |
+|---|---|---|---|
+| `/app/hello` | `name` in the query string | `200` with a JSON greeting | `400` when `name` is missing |
+| `/app/square` | `n` in the query string | `200` with the input and its square | `400` when `n` is missing or not a number |
+| `/app/time` | none | `200` with the current server time | — |
+| `/app/health` | none | `200` with a status flag | — |
 
-Routing is a chain of explicit conditions on the request path, with no framework and no
-annotation-based dispatcher, which is what the lab asks for: the mechanism that selects
-behaviour stays visible.
+All four return `application/json`. None of them stores anything between requests:
+every response is computed from the current request alone.
 
-Still missing: the square, server-time and health services; parsing the individual query
-parameter instead of echoing the whole query string; the JSON content type; client-error
-responses for missing or invalid parameters; and escaping untrusted values.
+![Service responses, valid and invalid](docs/services.png)
 
+**Validation.** Query parameters are split on `&` and `=` before being URL-decoded,
+not after: decoding first would turn a `%26` inside a value into a real separator and
+split the parameter in the wrong place. A missing or non-numeric parameter produces a
+client-error status rather than a successful response carrying an error message.
+
+**Escaping.** User input is never inserted into JSON as-is. A name containing a quote
+would close the string early and break the response, so quotes, backslashes, control
+characters and angle brackets are escaped before the value is embedded.
+
+The server time is returned in ISO-8601 with its offset, so the value is clearly
+produced by the server rather than read from the browser clock.
 ---
 
 ### 5. Asynchronous browser client
