@@ -94,6 +94,28 @@ asks for each one individually.
 
 ![Network view showing five separate requests](docs/network-static.png)
 
+Content length is computed from the byte array rather than from the number of
+characters. This matters because a single accented character takes two bytes in
+UTF-8: counting characters would announce a size the client never receives, and the
+browser would either truncate the body or wait for bytes that never arrive.
+
+#### Controlled error responses
+
+Requests that cannot be served produce an explicit status instead of a generic
+answer:
+![responseErrors](docs/responseErrors.png)
+
+
+Only `GET` is accepted for this laboratory, and a rejected method carries an `Allow`
+header so the client knows what the server does support.
+
+The traversal attempt is rejected before the file system is touched. The path is
+URL-decoded first, so an attack written as `%2e%2e` cannot slip past the check, and
+`pom.xml` is never disclosed. Backslashes and null bytes are rejected for the same
+reason: the application is developed on Windows and deployed on Linux, and both
+separators must be blocked to behave identically on either host.
+
+
 ---
 
 ### 4. Hardcoded service URLs
