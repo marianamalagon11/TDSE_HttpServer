@@ -196,10 +196,48 @@ interpreted as HTML.
 
 ---
 
-### 6. Integration and testing
+### 6.2 Observing the sequential limitation
 
-**Pending.** Functional test matrix and the two-window experiment that shows the second
-request waiting for the first one to finish.
+The prediction recorded in section 1 was that a second user would wait while the
+first one runs a slow request. The experiment confirms it.
+
+A deliberately slow service was added for this purpose. One window requested it; two
+seconds later, a second window requested the server time — an operation that normally
+completes in about six milliseconds.
+
+| Window | Request | Time |
+|---|---|---|
+| 1 | `/app/slow?seconds=5` | 5.03 s |
+| 2 | `/app/time` | 3.09 s |
+
+While the slow request was in flight, the second window's request sat in `(pending)`
+state. It completed only once the first one finished, and the timestamps show how
+tightly the two are coupled:
+
+| Response | Timestamp |
+|---|---|
+| Slow request finished | `2026-09-07T21:17:27.2167702-05:00` |
+| Server time answered | `2026-09-07T21:17:27.2247599-05:00` |
+
+Eight milliseconds apart. The second window was not waiting for the clock to be read;
+it was waiting for its turn.
+
+![Second window pending while the slow request runs](docs/sequential-pending.png)
+
+![Second window resolved after 3.09 s](docs/sequential-waited.png)
+
+![Slow request in the first window](docs/sequential-slow.png)
+
+**Asynchronous client, non-concurrent server.** These are two different properties and
+they are easy to confuse. The second window never froze: its page stayed interactive
+and its buttons reacted, because `await` does not block the browser. But the server is
+a single thread inside a loop, and that thread was held by the first request. It does
+not return to accepting connections until the current response is written. The second
+connection had already been established by the operating system and was sitting in the
+socket's accept queue with nobody to read it.
+
+Asynchronous JavaScript improves what the user sees while waiting. It does not change
+how many requests the server can handle at once.
 
 ---
 

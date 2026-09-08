@@ -119,6 +119,8 @@ public class HttpServer {
                 return Services.time();
             case "/app/health":
                 return Services.health();
+            case "/app/slow":
+                return Services.slow(query.get("seconds"));
             default:
                 return staticFile(path);
         }

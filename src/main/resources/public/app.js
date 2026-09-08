@@ -95,3 +95,11 @@ document.getElementById("btn-hora").addEventListener("click", async (evento) => 
         mostrarResultado("Hora del servidor: " + datos.serverTime);
     }
 });
+
+document.getElementById("btn-lento").addEventListener("click", async (evento) => {
+    evento.preventDefault();
+    const datos = await pedirServicio("/app/slow?seconds=5");
+    if (datos) {
+        mostrarResultado("La peticion lenta termino a las " + datos.finishedAt + ".");
+    }
+});
