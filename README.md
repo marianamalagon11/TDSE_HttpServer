@@ -241,17 +241,34 @@ how many requests the server can handle at once.
 
 ---
 
-### 7. Deployment to AWS EC2
+### 7. Deployment
 
-**Instance launched.** One `t3.micro` Linux instance is running in `us-east-1`, in the
-default VPC, with a descriptive name tag.
+#### 7.1 Preparing the application
 
-Still pending: producing a deployable artifact, making the listening port configurable,
-adding the security-group inbound rule for the application port, installing the Java
-runtime, transferring the artifact, and running it as a managed background service.
+The build produces a single executable artifact under `target/`. The public
+resources live in `src/main/resources`, so the HTML, the stylesheet, the client
+script and both images are packaged inside the jar: deployment is one file to
+transfer, with nothing to keep in sync alongside it.
 
-**Evidence:** `docs/…` — EC2 console showing the running instance. Account identifier and
-user name redacted.
+
+**Configurable port.** The listening port is taken from the first command-line
+argument, then from the `PORT` environment variable, and falls back to 35000 if
+neither is set. Running the same artifact twice on different ports confirms it:
+
+![Two instances started on different ports](docs/configurable-port.png)
+
+Both instances serve the full application, images and stylesheet included, which
+verifies that the resources are read from inside the jar rather than from the
+project directory:
+
+![The same application served on ports 8080 and 35000](docs/jar-two-ports.png)
+
+**Remote connections.** The server socket is created without binding to a specific
+address, so it listens on all interfaces rather than only on the loopback address.
+This is what allows the application to be reached from outside once it runs on a
+cloud instance.
+
+**Runtime required.** Java 21. The artifact was tested locally before being uploaded.
 
 ---
 

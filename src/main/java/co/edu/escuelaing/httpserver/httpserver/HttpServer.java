@@ -21,6 +21,9 @@ public class HttpServer {
     // Carpeta donde guardo el HTML, el JS, el CSS y las imagenes
     private static final String PUBLIC_ROOT = "/public";
 
+    // Puerto que uso si no me pasan ninguno
+    private static final int DEFAULT_PORT = 35000;
+
     // Relaciono cada extension con el tipo que le anuncio al navegador
     private static final Map<String, String> CONTENT_TYPES = new HashMap<>();
 
@@ -37,8 +40,13 @@ public class HttpServer {
     }
 
     public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(35000);
-        System.out.println("Ready to receive...");
+        int port = resolvePort(args);
+
+        // Al no indicar direccion, el socket escucha en 0.0.0.0, o sea en
+        // todas las interfaces. Eso es lo que permite entrar desde afuera
+        // cuando corre en EC2, y no solo desde localhost.
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("Ready to receive on port " + port);
 
         while (true) {
             // Con try-with-resources el socket del cliente se cierra siempre,
@@ -51,6 +59,19 @@ public class HttpServer {
                 System.err.println("Peticion fallida: " + e);
             }
         }
+    }
+
+    // El puerto sale del argumento de linea de comandos, o de la variable de
+    // entorno PORT, o queda en el valor por defecto
+    static int resolvePort(String[] args) {
+        if (args != null && args.length > 0) {
+            return Integer.parseInt(args[0]);
+        }
+        String env = System.getenv("PORT");
+        if (env != null && !env.isBlank()) {
+            return Integer.parseInt(env.trim());
+        }
+        return DEFAULT_PORT;
     }
 
     // Lee una peticion completa y escribe la respuesta
