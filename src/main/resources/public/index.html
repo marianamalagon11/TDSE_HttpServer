@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor HTTP secuencial</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header>
+    <img src="/img/logoU.png" alt="Logo de la Escuela Colombiana de Ingeniería"
+         width="72" height="72">
+    <h1>Servidor HTTP secuencial</h1>
+    <p>Un solo proceso Java atiende una conexión a la vez.</p>
+</header>
+
+<main>
+    <section>
+        <h2>Saludo</h2>
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" value="Mariana" autocomplete="off">
+        <button id="btn-saludo">Pedir saludo</button>
+    </section>
+
+    <section>
+        <h2>Cuadrado</h2>
+        <label for="numero">Número</label>
+        <input type="number" id="numero" value="7" step="any">
+        <button id="btn-cuadrado">Calcular cuadrado</button>
+    </section>
+
+    <section>
+        <h2>Hora del servidor</h2>
+        <p>El valor viene del servidor, no del reloj del navegador.</p>
+        <button id="btn-hora">Consultar hora</button>
+    </section>
+
+    <section>
+        <h2>Petición lenta</h2>
+        <p>Ejecútala en una ventana y pide otro servicio en una segunda ventana:
+           la segunda queda esperando.</p>
+        <button id="btn-lento">Esperar 5 segundos</button>
+    </section>
+</main>
+
+<section id="resultado" aria-live="polite">
+    <h2>Resultado</h2>
+    <p id="resultado-texto">Todavía no has pedido nada.</p>
+</section>
+
+<section id="error" role="alert" hidden>
+    <h2>Error</h2>
+    <p id="error-texto"></p>
+</section>
+
+<figure>
+    <img src="/img/fotoU.jpeg" alt="Escuela Colombiana de Ingeniería" width="640">
+    <figcaption>Cada recurso de esta página llegó en una petición HTTP distinta.</figcaption>
+</figure>
+
+<script src="/app.js"></script>
+
+</body>
+</html>
