@@ -265,10 +265,66 @@ project directory:
 
 **Remote connections.** The server socket is created without binding to a specific
 address, so it listens on all interfaces rather than only on the loopback address.
-This is what allows the application to be reached from outside once it runs on a
-cloud instance.
+This is what allows the application to be reached from outside once it runs remotely.
 
-**Runtime required.** Java 21. The artifact was tested locally before being uploaded .
+**Runtime required:** Java 21. The packaged artifact was tested locally before being
+uploaded.
+
+#### 7.2 Security group
+
+The instance firewall exposes only what the laboratory needs: the application port,
+and administrative access restricted to a single address.
+
+| Type | Port | Source | Purpose |
+|---|---|---|---|
+| Custom TCP | 35000 | Anywhere-IPv4 | Application traffic for the classroom test |
+| SSH | 22 | My IP only | Administrative access |
+
+SSH is deliberately not open to every address: port 35000 serves a public web page,
+while port 22 grants administrative access to the machine.
+
+![Inbound rules](docs/security-group.png)
+
+#### 7.3 Install and start
+
+The Java runtime was installed on the instance with the distribution's package
+manager:
+
+![Java 21 installed on the instance](docs/ec2-java.png)
+
+The artifact was transferred over SSH with `scp`, and the health service was verified
+from **inside** the instance before testing from the browser. Checking locally first
+separates an application problem from a network problem:
+
+![Health service answering from inside the instance](docs/ec2-health.png)
+
+The application then answered on the instance's public address. All five static
+resources and all four services respond correctly:
+
+![The application running from the EC2 public address](docs/ec2-running.png)
+
+**What changed and what did not.** Response times went from tens of milliseconds
+locally to hundreds remotely — the cost of the round trip between the client and the
+region, not of the server itself. The slow service still takes just over five seconds
+and still blocks every other request while it runs. The host changed; the
+architecture did not.
+
+#### 7.4 Running after logout
+
+The application is managed by the operating system's service manager rather than
+started by hand. The unit sets the port through the `PORT` environment variable,
+restarts the process if it fails, and appends output to a known log file.
+
+![Service reported as active and enabled](docs/ec2-systemd.png)
+
+This was verified rather than assumed: the SSH session was closed and the application
+kept answering.
+
+![The page still responding after the administration session was closed](docs/ec2-logout.png)
+
+Logs are written to a fixed location and can be inspected at any time:
+
+![Server log on the instance](docs/ec2-logs.png)
 
 ---
 
