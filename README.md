@@ -268,7 +268,7 @@ address, so it listens on all interfaces rather than only on the loopback addres
 This is what allows the application to be reached from outside once it runs on a
 cloud instance.
 
-**Runtime required.** Java 21. The artifact was tested locally before being uploaded.
+**Runtime required.** Java 21. The artifact was tested locally before being uploaded .
 
 ---
 
