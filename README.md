@@ -152,13 +152,47 @@ produced by the server rather than read from the browser clock.
 
 ### 5. Asynchronous browser client
 
-**Partial.** The page already sends requests without reloading, using the browser's
-asynchronous request API, and updates only the result area.
+The home page is the client interface. Every action is handled by `app.js`, which
+builds the service URL, sends the request with the browser's asynchronous request API,
+and updates only the relevant part of the page. The document is never reloaded: in the
+network view the page, the stylesheet, the script and the images are requested once,
+while each button click adds a single `fetch` entry.
 
-Still missing: moving the script to its own JavaScript file, a numeric field and a
-server-time action, a dedicated error area, checking the HTTP status before reading the
-body, a visible loading state, and handling a network failure separately from a valid HTTP
-error response.
+**Interface.** A text field and an action for the greeting, a numeric field and an
+action for the square, an action for the server time, a result area, and a separate
+error area. Both areas can hold content at the same time, so an invalid request does
+not erase the last successful result.
+
+![Successful asynchronous requests without page reload](docs/async-client.png)
+
+**Handling the three outcomes.** The client distinguishes a network failure from a
+valid HTTP error response from a successful one, because they need different messages:
+
+- The request never reaches a server — no HTTP response exists — and the user is told
+  the server could not be contacted.
+- The request completes but the status indicates an error. This case needs an explicit
+  check: `fetch` treats a `400` as a completed request and does not raise, so reading
+  the body without checking the status first would display `undefined` instead of the
+  problem. The status is verified before the body is interpreted, and the `error`
+  field returned by the service is shown as the message.
+- The request succeeds and the JSON values update the result area.
+
+**Loading state.** Buttons are disabled and the result area announces that a response
+is pending, so the interface visibly reacts while the request is in flight. The state
+is always restored, including when the request fails.
+
+**Input validation happens twice.** Empty fields are caught in the browser before any
+request is sent, and the server independently rejects missing or non-numeric
+parameters. Client-side checks are a convenience, not a guarantee: a request can reach
+the server without passing through the page at all, so the service validates on its
+own.
+
+![Invalid input producing a controlled 400 and a readable message](docs/async-client-error.png)
+
+Values are URL-encoded before being placed in the query string, which is the
+counterpart of the decoding performed by the server. Responses are written into the
+page as text rather than as markup, so a value coming back from the server is never
+interpreted as HTML.
 
 ---
 
